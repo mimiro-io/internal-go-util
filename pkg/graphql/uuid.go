@@ -1,4 +1,4 @@
-package gqlgen
+package graphql
 
 import (
 	"fmt"

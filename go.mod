@@ -7,4 +7,7 @@ require (
 	github.com/gofrs/uuid v4.2.0+incompatible
 )
 
-require github.com/vektah/gqlparser/v2 v2.4.0 // indirect
+require (
+	github.com/rs/xid v1.4.0 // indirect
+	github.com/vektah/gqlparser/v2 v2.4.0 // indirect
+)

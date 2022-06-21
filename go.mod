@@ -8,6 +8,7 @@ require (
 )
 
 require (
+	github.com/bcicen/jstream v1.0.1 // indirect
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.4.0 // indirect
 )

@@ -24,7 +24,7 @@ type Context struct {
 	ID              string            `json:"id"`
 	Namespaces      map[string]string `json:"namespaces"`
 	NamespaceLookup map[string]string `json:"omit"`
-	RDFs            map[string]string
+	RDFs            map[string]string `json:"omit"`
 }
 
 // StripPrefixes will strip the namespace prefix from any property, making it

@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 )
 
 // MarshalUUID returns the string form of uuid, xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -22,7 +22,7 @@ func MarshalUUID(u uuid.UUID) graphql.Marshaler {
 func UnmarshalUUID(v interface{}) (uuid.UUID, error) {
 	switch v := v.(type) {
 	case string:
-		uid, err := uuid.FromString(v)
+		uid, err := uuid.Parse(v)
 		if err != nil {
 			return uuid.Nil, fmt.Errorf("%T is not an UUID: %w", v, err)
 		}

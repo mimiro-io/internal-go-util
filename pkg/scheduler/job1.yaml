@@ -1,0 +1,47 @@
+id: test-animal-eanaku
+title: test-animal-eanaku
+version: 2
+tags:
+  - tag1
+  - tag2
+description: |
+  This is a random job
+
+paused: false
+batchSize: 1000
+requireDataset: true
+
+triggers:
+  - triggerType: cron
+    schedule: @every 120s
+    jobType: incremental
+
+resumeOnRestart: true
+tasks:
+  - id: task1
+    name: process task 1
+    description: This is a test
+    source:
+      latestOnly: false
+      dataset: sdb.Owner
+      type: DatasetSource
+    sink:
+      dataset: test.CattleGroup
+      type: DatasetSink
+  - id: task2
+    name: process task 2
+    description: This is another test
+    source:
+      batchSize: 10000
+      dataset: test.CattleGroup
+      type: DatasetSource
+    sink:
+      tokenProvider: JwtTokenProvider
+      type: HttpDatasetSink
+      url: "http://datalayer-s3/datasets/skifte.TaskGpsPointCompleted/entities"
+    dependsOn:
+      - task1
+onSuccess:
+  - SuccessReport
+onFailure:
+  - ErrorReport

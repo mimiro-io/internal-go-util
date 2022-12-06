@@ -57,10 +57,11 @@ func NewJobScheduler(logger *zap.SugaredLogger, name string, store Store, concur
 		cron: cron.New(cron.WithLogger(l), cron.WithChain(
 			cron.Recover(l),
 		)),
-		workPermits: make(chan struct{}, concurrency),
-		jobs:        make(map[JobId]*worker),
-		count:       atomic.NewInt32(concurrency),
-		store:       store,
+		workPermits:   make(chan struct{}, concurrency),
+		jobs:          make(map[JobId]*worker),
+		scheduledJobs: make(map[cron.EntryID]*worker),
+		count:         atomic.NewInt32(concurrency),
+		store:         store,
 	}
 	s.start()
 	return s

@@ -99,7 +99,7 @@ func (job *Job) Run(ctx context.Context) {
 	job.logger = job.logger.Named(fmt.Sprintf("job-%s", job.Id))
 
 	history := &JobHistory{
-		Id:    job.Id,
+		JobId: job.Id,
 		Title: job.Title,
 		Start: time.Now(),
 	}

@@ -8,19 +8,19 @@ import (
 )
 
 type JobConfiguration struct {
-	Id              string               `json:"id"`
-	Title           string               `json:"title"`
-	Description     string               `json:"description"`
-	Tags            []string             `json:"tags"`
-	Paused          bool                 `json:"paused"`
-	BatchSize       int                  `json:"batchSize"`
-	ResumeOnRestart bool                 `json:"resumeOnRestart"`
-	OnError         []string             `json:"onError"`
-	OnSuccess       []string             `json:"onSuccess"`
-	Schedule        string               `json:"schedule"`
-	Topic           string               `json:"topic"`
-	Tasks           []*TaskConfiguration `json:"tasks"`
-	DefaultFunc     func(ctx context.Context, task *JobTask) error
+	Id              string                                         `json:"id"`
+	Title           string                                         `json:"title"`
+	Description     string                                         `json:"description"`
+	Tags            []string                                       `json:"tags,omitempty"`
+	Paused          bool                                           `json:"paused"`
+	BatchSize       int                                            `json:"batchSize"`
+	ResumeOnRestart bool                                           `json:"resumeOnRestart"`
+	OnError         []string                                       `json:"onError,omitempty"`
+	OnSuccess       []string                                       `json:"onSuccess,omitempty"`
+	Schedule        string                                         `json:"schedule"`
+	Topic           string                                         `json:"topic"`
+	Tasks           []*TaskConfiguration                           `json:"tasks,omitempty"`
+	DefaultFunc     func(ctx context.Context, task *JobTask) error `json:"-"`
 }
 
 type TaskConfiguration struct {

@@ -182,6 +182,7 @@ func (i *InMemoryStore) GetJobHistory(jobId JobId, limit int) ([]*JobHistory, er
 func (i *InMemoryStore) SaveJobHistory(jobId JobId, history *JobHistory) error {
 	runId := xid.New()
 	id := fmt.Sprintf("%s::%s", jobId, runId)
+	history.Id = id
 	i.history[id] = history
 	return nil
 }

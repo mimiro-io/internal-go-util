@@ -40,7 +40,8 @@ type JobRunState struct {
 }
 
 type JobHistory struct {
-	Id        JobId        `json:"id"`
+	Id        string       `json:"id"`
+	JobId     JobId        `json:"jobId"`
 	Title     string       `json:"title"`
 	State     string       `json:"state"`
 	Start     time.Time    `json:"start"`

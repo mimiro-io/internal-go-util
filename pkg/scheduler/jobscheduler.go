@@ -394,12 +394,16 @@ func (runner *JobRunner) Schedules() []JobEntry {
 				Job:      v.job,
 			}
 			tasks := make([]*TaskEntry, 0)
-			for _, t := range v.job.chain.tasks {
-				tasks = append(tasks, &TaskEntry{
-					Id:    t.Id,
-					Name:  t.Name,
-					State: t.state.Status.String(),
-				})
+
+			// if a job is scheduled, but not running, then the chain is nil
+			if v.job.chain != nil {
+				for _, t := range v.job.chain.tasks {
+					tasks = append(tasks, &TaskEntry{
+						Id:    t.Id,
+						Name:  t.Name,
+						State: t.state.Status.String(),
+					})
+				}
 			}
 			entries = append(entries, entry)
 		}

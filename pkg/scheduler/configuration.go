@@ -7,9 +7,17 @@ import (
 	"time"
 )
 
+type Version string
+
+const (
+	JobConfigurationVersion1 Version = "1"
+	JobConfigurationVersion2 Version = "2"
+)
+
 type JobConfiguration struct {
 	Id              string                                         `json:"id"`
 	Title           string                                         `json:"title"`
+	Version         Version                                        `json:"version"`
 	Description     string                                         `json:"description"`
 	Tags            []string                                       `json:"tags,omitempty"`
 	Paused          bool                                           `json:"paused"`

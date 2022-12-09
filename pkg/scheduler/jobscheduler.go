@@ -106,7 +106,7 @@ func (scheduler *JobScheduler) doWork(runner *JobRunner, work *worker) {
 	}()
 
 	// load the config, some tings needs to be figured out at runtime
-	config, _ := scheduler.store.GetConfiguration(string(work.job.Id))
+	config, _ := scheduler.store.GetConfiguration(work.job.Id)
 	if config != nil {
 		if config.Paused {
 			return
@@ -361,7 +361,7 @@ func (runner *JobRunner) RemoveJob(jobId JobId) error {
 			runner.jobScheduler.lock.Unlock()
 		}
 	}
-	return runner.jobScheduler.store.DeleteConfiguration(string(jobId))
+	return runner.jobScheduler.store.DeleteConfiguration(jobId)
 }
 
 func (runner *JobRunner) CancelJob(jobId JobId) {

@@ -32,11 +32,14 @@ type JobConfiguration struct {
 }
 
 type TaskConfiguration struct {
-	Id          string   `json:"id"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	BatchSize   int      `json:"batchSize"`
-	DependsOn   []string `json:"dependsOn"`
+	Id          string         `json:"id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	BatchSize   int            `json:"batchSize"`
+	DependsOn   []string       `json:"dependsOn"`
+	Source      map[string]any `json:"source"`
+	Sink        map[string]any `json:"sink"`
+	Transform   map[string]any `json:"transform"`
 }
 
 type JobRunState struct {
@@ -58,9 +61,9 @@ type JobHistory struct {
 	Tasks     []*TaskState `json:"tasks"`
 }
 
-func (config *JobConfiguration) ToJob() (*Job, error) {
+func (config *JobConfiguration) ToJob(addTasks bool) (*Job, error) {
 	job := &Job{
-		Id:              JobId(config.Id),
+		Id:              config.Id,
 		Title:           config.Title,
 		Description:     config.Description,
 		Tags:            config.Tags,
@@ -73,44 +76,46 @@ func (config *JobConfiguration) ToJob() (*Job, error) {
 		Topic:           config.Topic,
 		Tasks:           nil,
 	}
-	taskSet := make(map[string]*JobTask)
-	tasks := make([]*JobTask, 0)
-	for _, taskConfig := range config.Tasks {
-		id := taskConfig.Id
-		if id == "" {
-			id = xid.New().String()
-		}
-		task := &JobTask{
-			Id:          id,
-			Name:        taskConfig.Name,
-			Description: taskConfig.Description,
-			BatchSize:   taskConfig.BatchSize,
-			DependsOn:   make([]*JobTask, 0),
-		}
-		if config.DefaultFunc != nil {
-			task.Fn = config.DefaultFunc
-		}
-		taskSet[taskConfig.Id] = task
-
-		tasks = append(tasks, task)
-	}
-	for _, taskConfig := range config.Tasks {
-		if taskConfig.DependsOn != nil {
-			for _, d := range taskConfig.DependsOn {
-				dependsOn, ok := taskSet[d]
-				if !ok {
-					return nil, errors.New("missing task dependency")
-				}
-				task := taskSet[taskConfig.Id]
-				task.DependsOn = append(task.DependsOn, dependsOn)
+	if addTasks {
+		taskSet := make(map[string]*JobTask)
+		tasks := make([]*JobTask, 0)
+		for _, taskConfig := range config.Tasks {
+			id := taskConfig.Id
+			if id == "" {
+				id = xid.New().String()
 			}
+			task := &JobTask{
+				Id:          id,
+				Name:        taskConfig.Name,
+				Description: taskConfig.Description,
+				BatchSize:   taskConfig.BatchSize,
+				DependsOn:   make([]*JobTask, 0),
+			}
+			if config.DefaultFunc != nil {
+				task.Fn = config.DefaultFunc
+			}
+			taskSet[taskConfig.Id] = task
 
+			tasks = append(tasks, task)
 		}
-	}
-	job.Tasks = tasks
-	err := job.Verify()
-	if err != nil {
-		return nil, err
+		for _, taskConfig := range config.Tasks {
+			if taskConfig.DependsOn != nil {
+				for _, d := range taskConfig.DependsOn {
+					dependsOn, ok := taskSet[d]
+					if !ok {
+						return nil, errors.New("missing task dependency")
+					}
+					task := taskSet[taskConfig.Id]
+					task.DependsOn = append(task.DependsOn, dependsOn)
+				}
+
+			}
+		}
+		job.Tasks = tasks
+		err := job.Verify()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// map up success state:

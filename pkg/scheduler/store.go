@@ -15,9 +15,9 @@ import (
 // 3. Exit status, aka the job + task log
 
 type Store interface {
-	GetConfiguration(id string) (*JobConfiguration, error)
-	SaveConfiguration(id string, config *JobConfiguration) error
-	DeleteConfiguration(id string) error
+	GetConfiguration(id JobId) (*JobConfiguration, error)
+	SaveConfiguration(id JobId, config *JobConfiguration) error
+	DeleteConfiguration(id JobId) error
 	ListConfigurations() ([]*JobConfiguration, error)
 	GetTaskState(jobId JobId, taskId string) (*TaskState, error)
 	SaveTaskState(jobId JobId, state *TaskState) error
@@ -66,16 +66,16 @@ func (b BadgerStore) DeleteJobHistory(jobId JobId) error {
 	panic("implement me")
 }
 
-func (b BadgerStore) GetConfiguration(id string) (*JobConfiguration, error) {
-	return FindOne[JobConfiguration](b.db, INDEX_JOB_CONFIG, id)
+func (b BadgerStore) GetConfiguration(id JobId) (*JobConfiguration, error) {
+	return FindOne[JobConfiguration](b.db, INDEX_JOB_CONFIG, string(id))
 }
 
-func (b BadgerStore) SaveConfiguration(id string, config *JobConfiguration) error {
-	return Save[JobConfiguration](b.db, INDEX_JOB_CONFIG, id, config)
+func (b BadgerStore) SaveConfiguration(id JobId, config *JobConfiguration) error {
+	return Save[JobConfiguration](b.db, INDEX_JOB_CONFIG, string(id), config)
 }
 
-func (b BadgerStore) DeleteConfiguration(id string) error {
-	return Delete(b.db, INDEX_JOB_CONFIG, id)
+func (b BadgerStore) DeleteConfiguration(id JobId) error {
+	return Delete(b.db, INDEX_JOB_CONFIG, string(id))
 }
 
 func (b BadgerStore) ListConfigurations() ([]*JobConfiguration, error) {
@@ -129,7 +129,7 @@ var _ Store = (*InMemoryStore)(nil)
 
 type InMemoryStore struct {
 	lock    sync.Mutex
-	configs map[string]*JobConfiguration
+	configs map[JobId]*JobConfiguration
 	tasks   map[string]*TaskState
 	history map[string]*JobHistory
 }
@@ -198,13 +198,13 @@ func (i *InMemoryStore) DeleteJobHistory(jobId JobId) error {
 
 func NewInMemoryStore() Store {
 	return &InMemoryStore{
-		configs: make(map[string]*JobConfiguration),
+		configs: make(map[JobId]*JobConfiguration),
 		tasks:   make(map[string]*TaskState),
 		history: make(map[string]*JobHistory),
 	}
 }
 
-func (i *InMemoryStore) GetConfiguration(id string) (*JobConfiguration, error) {
+func (i *InMemoryStore) GetConfiguration(id JobId) (*JobConfiguration, error) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 	if v, ok := i.configs[id]; ok {
@@ -213,14 +213,14 @@ func (i *InMemoryStore) GetConfiguration(id string) (*JobConfiguration, error) {
 	return nil, nil
 }
 
-func (i *InMemoryStore) SaveConfiguration(id string, config *JobConfiguration) error {
+func (i *InMemoryStore) SaveConfiguration(id JobId, config *JobConfiguration) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 	i.configs[id] = config
 	return nil
 }
 
-func (i *InMemoryStore) DeleteConfiguration(id string) error {
+func (i *InMemoryStore) DeleteConfiguration(id JobId) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 	delete(i.configs, id)

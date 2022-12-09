@@ -20,6 +20,10 @@ const (
 	WorkerStateError   = "ERROR"
 )
 
+var (
+	ErrMissingTask = errors.New("tasks are missing on job")
+)
+
 type JobScheduler struct {
 	name          string
 	logger        *zap.SugaredLogger
@@ -267,6 +271,10 @@ func (runner *JobRunner) RunningState(jobId JobId) *JobRunState {
 }
 
 func (runner *JobRunner) Schedule(schedule string, once bool, job *Job) (cron.EntryID, error) {
+	if job.Tasks == nil || len(job.Tasks) == 0 {
+		return 0, ErrMissingTask
+	}
+
 	work := &worker{
 		Name:     job.Title,
 		Schedule: schedule,

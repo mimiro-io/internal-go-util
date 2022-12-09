@@ -37,6 +37,7 @@ type TaskConfiguration struct {
 	Description string         `json:"description"`
 	BatchSize   int            `json:"batchSize"`
 	DependsOn   []string       `json:"dependsOn"`
+	Type        string         `json:"type"`
 	Source      map[string]any `json:"source"`
 	Sink        map[string]any `json:"sink"`
 	Transform   map[string]any `json:"transform"`

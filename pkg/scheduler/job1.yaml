@@ -10,17 +10,14 @@ description: |
 paused: false
 batchSize: 1000
 requireDataset: true
-
-triggers:
-  - triggerType: cron
-    schedule: @every 120s
-    jobType: incremental
-
+schedule: @every 120s
 resumeOnRestart: true
+
 tasks:
   - id: task1
     name: process task 1
     description: This is a test
+    type: incremental
     source:
       latestOnly: false
       dataset: sdb.Owner
@@ -31,6 +28,7 @@ tasks:
   - id: task2
     name: process task 2
     description: This is another test
+    type: fullSync
     source:
       batchSize: 10000
       dataset: test.CattleGroup

@@ -15,7 +15,7 @@ const (
 )
 
 type JobConfiguration struct {
-	Id              string                                         `json:"id"`
+	Id              JobId                                          `json:"id"`
 	Title           string                                         `json:"title"`
 	Version         Version                                        `json:"version"`
 	Description     string                                         `json:"description"`

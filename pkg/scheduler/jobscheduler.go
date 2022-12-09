@@ -336,7 +336,6 @@ func (runner *JobRunner) runTask(ctx context.Context, chain *jobChain, task *Job
 		err2 := task.Run(ctx)
 		if err2 != nil {
 			_ = task.setFailed(chain.jobId, err2)
-			chain.logger.Info("Failed Job task %s-%s: %v (%v of %v)", chain.jobId, task.Id, err2)
 			chain.stop(err2)
 		}
 	}()

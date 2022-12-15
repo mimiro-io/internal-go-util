@@ -7,7 +7,7 @@ tags:
 description: |
   This is a random job
 
-paused: false
+enabled: true
 batchSize: 1000
 requireDataset: true
 schedule: @every 120s

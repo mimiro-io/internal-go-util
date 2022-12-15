@@ -108,7 +108,7 @@ func (scheduler *JobScheduler) doWork(runner *JobRunner, work *worker) {
 	// load the config, some tings needs to be figured out at runtime
 	config, _ := scheduler.store.GetConfiguration(work.job.Id)
 	if config != nil {
-		if config.Paused {
+		if !config.Enabled {
 			return
 		}
 	}

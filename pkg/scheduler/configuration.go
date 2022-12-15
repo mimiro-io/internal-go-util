@@ -20,7 +20,7 @@ type JobConfiguration struct {
 	Version         Version                                        `json:"version"`
 	Description     string                                         `json:"description"`
 	Tags            []string                                       `json:"tags,omitempty"`
-	Paused          bool                                           `json:"paused"`
+	Enabled         bool                                           `json:"enabled"`
 	BatchSize       int                                            `json:"batchSize"`
 	ResumeOnRestart bool                                           `json:"resumeOnRestart"`
 	OnError         []string                                       `json:"onError,omitempty"`
@@ -68,7 +68,7 @@ func (config *JobConfiguration) ToJob(addTasks bool) (*Job, error) {
 		Title:           config.Title,
 		Description:     config.Description,
 		Tags:            config.Tags,
-		Paused:          config.Paused,
+		Enabled:         config.Enabled,
 		BatchSize:       config.BatchSize,
 		ResumeOnRestart: config.ResumeOnRestart,
 		OnError:         nil,

@@ -108,10 +108,15 @@ func (scheduler *JobScheduler) doWork(runner *JobRunner, work *worker) {
 	// load the config, some tings needs to be figured out at runtime
 	config, _ := scheduler.store.GetConfiguration(work.job.Id)
 	if config != nil {
-		if !config.Enabled {
+		if !config.Enabled { // if the job is not enabled, then just exit
 			return
 		}
 	}
+
+	// maybe the enabled state has changed, then the scheduled job needs to reflect that for the future, so update it
+	runner.jobScheduler.lock.Lock()
+	runner.jobScheduler.scheduledJobs[work.Id].job.Enabled = config.Enabled
+	runner.jobScheduler.lock.Unlock()
 
 	if scheduler.workPermits != nil { // limit the no of parallel jobs with a chan
 		scheduler.workPermits <- struct{}{}

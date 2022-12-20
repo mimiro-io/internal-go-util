@@ -15,32 +15,32 @@ const (
 )
 
 type JobConfiguration struct {
-	Id              JobId                                          `json:"id"`
-	Title           string                                         `json:"title"`
-	Version         Version                                        `json:"version"`
-	Description     string                                         `json:"description"`
-	Tags            []string                                       `json:"tags,omitempty"`
-	Enabled         bool                                           `json:"enabled"`
-	BatchSize       int                                            `json:"batchSize"`
-	ResumeOnRestart bool                                           `json:"resumeOnRestart"`
-	OnError         []string                                       `json:"onError,omitempty"`
-	OnSuccess       []string                                       `json:"onSuccess,omitempty"`
-	Schedule        string                                         `json:"schedule"`
-	Topic           string                                         `json:"topic"`
-	Tasks           []*TaskConfiguration                           `json:"tasks,omitempty"`
+	Id              JobId                                          `json:"id" yaml:"id"`
+	Title           string                                         `json:"title" yaml:"title"`
+	Version         Version                                        `json:"version" yaml:"version"`
+	Description     string                                         `json:"description" yaml:"description"`
+	Tags            []string                                       `json:"tags,omitempty" yaml:"tags"`
+	Enabled         bool                                           `json:"enabled" yaml:"enabled"`
+	BatchSize       int                                            `json:"batchSize" yaml:"batchSize"`
+	ResumeOnRestart bool                                           `json:"resumeOnRestart" yaml:"resumeOnRestart"`
+	OnError         []string                                       `json:"onError,omitempty" yaml:"onError"`
+	OnSuccess       []string                                       `json:"onSuccess,omitempty" yaml:"onSuccess"`
+	Schedule        string                                         `json:"schedule" yaml:"schedule"`
+	Topic           string                                         `json:"topic" yaml:"topic"`
+	Tasks           []*TaskConfiguration                           `json:"tasks,omitempty" yaml:"tasks"`
 	DefaultFunc     func(ctx context.Context, task *JobTask) error `json:"-"`
 }
 
 type TaskConfiguration struct {
-	Id          string         `json:"id"`
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	BatchSize   int            `json:"batchSize"`
-	DependsOn   []string       `json:"dependsOn"`
-	Type        string         `json:"type"`
-	Source      map[string]any `json:"source"`
-	Sink        map[string]any `json:"sink"`
-	Transform   map[string]any `json:"transform"`
+	Id          string         `json:"id" yaml:"id"`
+	Name        string         `json:"name" yaml:"name"`
+	Description string         `json:"description" yaml:"description"`
+	BatchSize   int            `json:"batchSize" yaml:"batchSize"`
+	DependsOn   []string       `json:"dependsOn" yaml:"dependsOn"`
+	Type        string         `json:"type" yaml:"type"`
+	Source      map[string]any `json:"source" yaml:"source"`
+	Sink        map[string]any `json:"sink" yaml:"sink"`
+	Transform   map[string]any `json:"transform" yaml:"transform"`
 }
 
 type JobRunState struct {

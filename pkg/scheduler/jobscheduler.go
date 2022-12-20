@@ -185,6 +185,31 @@ func NewJobRunner(jobScheduler *JobScheduler, taskScheduler *TaskScheduler, m st
 	}
 }
 
+func (runner *JobRunner) ForceReload(jobId JobId) error {
+	if state, ok := runner.jobScheduler.jobs[jobId]; ok {
+		// it does exist, we are interested in 2 changes; Enabled, and Schedule
+		jobConfiguration, err := runner.jobScheduler.store.GetConfiguration(jobId)
+		if err != nil {
+			return err
+		}
+		if jobConfiguration.Enabled != state.job.Enabled {
+			runner.jobScheduler.lock.Lock()
+			state.job.Enabled = jobConfiguration.Enabled
+			runner.jobScheduler.lock.Unlock()
+		}
+		if jobConfiguration.Schedule != state.Schedule {
+			// this has changed, stop the running job, and re-add
+			err := runner.RemoveJob(jobId, false)
+			if err != nil {
+				return err
+			}
+			_, err = runner.Schedule(jobConfiguration.Schedule, false, state.job)
+			return err
+		}
+	}
+	return nil
+}
+
 func (runner *JobRunner) RunJob(ctx context.Context, job *Job) error {
 	if state, ok := runner.jobScheduler.jobs[job.Id]; ok {
 		if state.State == WorkerStateRunning {
@@ -356,7 +381,7 @@ func (runner *JobRunner) runTask(ctx context.Context, chain *jobChain, task *Job
 }
 
 // RemoveJob will remove the Job from future running, but will not stop or cancel the job
-func (runner *JobRunner) RemoveJob(jobId JobId) error {
+func (runner *JobRunner) RemoveJob(jobId JobId, del bool) error {
 	for id, v := range runner.jobScheduler.jobs {
 		if id == jobId {
 			runner.jobScheduler.cron.Remove(v.Id)
@@ -366,7 +391,10 @@ func (runner *JobRunner) RemoveJob(jobId JobId) error {
 			runner.jobScheduler.lock.Unlock()
 		}
 	}
-	return runner.jobScheduler.store.DeleteConfiguration(jobId)
+	if del {
+		return runner.jobScheduler.store.DeleteConfiguration(jobId)
+	}
+	return nil
 }
 
 func (runner *JobRunner) CancelJob(jobId JobId) {

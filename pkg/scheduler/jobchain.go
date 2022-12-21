@@ -86,11 +86,20 @@ func (chain *jobChain) Run(ctx context.Context) error {
 
 	order, _ := graph.TopologicalSort(chain.g)
 
+	// go through once, and set the planned state if tasks are missing
+	// by doing this, we have the full set of tasks, even if one is failing
+	for _, id := range order {
+		task := chain.tasks[id]
+		if task.state == nil {
+			_ = task.updateState(chain.jobId, StatusPlanned)
+		}
+	}
+
 	// TODO: we must figure out what to run next, as there might be more than 1 that we can run in parallel
 	for i, id := range order {
 		// need to do some task state managing
 		task := chain.tasks[id]
-		if task.state == nil {
+		if task.state == nil { // this is probably not needed
 			_ = task.updateState(chain.jobId, StatusPlanned)
 		} else if task.state.Status == StatusSuccess {
 			chain.logger.Info(fmt.Sprintf("Skipping Job Task %s-%s in state %s (%v of %v)", chain.jobId, task.Id, task.state.Status, i+1, len(order)))

@@ -210,12 +210,17 @@ func (runner *JobRunner) ForceReload(jobId JobId) error {
 	return nil
 }
 
-func (runner *JobRunner) RunJob(ctx context.Context, job *Job) error {
-	if state, ok := runner.jobScheduler.jobs[job.Id]; ok {
+func (runner *JobRunner) RunJob(ctx context.Context, jobId JobId) error {
+	var job *Job
+	if state, ok := runner.jobScheduler.jobs[jobId]; ok {
 		if state.State == WorkerStateRunning {
 			return errors.New(fmt.Sprintf("job with id '%s' (%s) already running", job.Id, job.Title))
 		}
+		job = state.job // we use the already existing job
+	} else {
+		return errors.New(fmt.Sprintf("job with id '%s' is missing from the job list", job.Id))
 	}
+
 	work := &worker{
 		Name:  job.Title,
 		State: WorkerStateIdle,
@@ -321,27 +326,33 @@ func (runner *JobRunner) Schedule(schedule string, once bool, job *Job) (cron.En
 		}
 	}
 
-	id, err := s.cron.AddFunc(work.Schedule, func() {
-		if ok && state.State == WorkerStateRunning { // cannot start more instances
-			return
+	var id cron.EntryID
+	if work.Schedule != "" { // we only add the work to the schedule if a schedule is set (but we still add the job to the list of jobs)
+		id, err := s.cron.AddFunc(work.Schedule, func() {
+			if ok && state.State == WorkerStateRunning { // cannot start more instances
+				return
+			}
+
+			work.State = WorkerStateRunning
+			defer func() {
+				work.State = WorkerStateIdle
+			}()
+
+			s.doWork(runner, work)
+		})
+		work.Id = id
+		s.logger.Infof("Adding work with id '%v' (%s) to schedule '%s'", work.job.Id, work.Name, work.Schedule)
+		if err != nil {
+			return 0, err
 		}
-
-		work.State = WorkerStateRunning
-		defer func() {
-			work.State = WorkerStateIdle
-		}()
-
-		s.doWork(runner, work)
-	})
-	work.Id = id
-	s.logger.Infof("Adding work with id '%v' (%s) to schedule '%s'", work.job.Id, work.Name, work.Schedule)
+	}
 
 	// keep track of registered jobs to use in returning a list of registered jobs
 	s.lock.Lock()
 	s.jobs[job.Id] = work
 	s.scheduledJobs[id] = work
 	s.lock.Unlock()
-	return id, err
+	return id, nil
 }
 
 func (runner *JobRunner) runTask(ctx context.Context, chain *jobChain, task *JobTask) error {

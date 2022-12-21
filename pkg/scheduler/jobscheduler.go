@@ -114,9 +114,7 @@ func (scheduler *JobScheduler) doWork(runner *JobRunner, work *worker) {
 	}
 
 	// maybe the enabled state has changed, then the scheduled job needs to reflect that for the future, so update it
-	runner.jobScheduler.lock.Lock()
-	runner.jobScheduler.scheduledJobs[work.Id].job.Enabled = config.Enabled
-	runner.jobScheduler.lock.Unlock()
+	work.job.Enabled = config.Enabled
 
 	if scheduler.workPermits != nil { // limit the no of parallel jobs with a chan
 		scheduler.workPermits <- struct{}{}

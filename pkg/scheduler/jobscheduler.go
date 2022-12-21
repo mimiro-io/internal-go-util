@@ -348,7 +348,7 @@ func (runner *JobRunner) Schedule(schedule string, once bool, job *Job) (cron.En
 	// keep track of registered jobs to use in returning a list of registered jobs
 	s.lock.Lock()
 	s.jobs[job.Id] = work
-	s.scheduledJobs[id] = work
+	s.scheduledJobs[work.Id] = work
 	s.lock.Unlock()
 	return id, nil
 }

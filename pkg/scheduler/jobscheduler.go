@@ -324,9 +324,9 @@ func (runner *JobRunner) Schedule(schedule string, once bool, job *Job) (cron.En
 		}
 	}
 
-	var id cron.EntryID
 	if work.Schedule != "" { // we only add the work to the schedule if a schedule is set (but we still add the job to the list of jobs)
 		id, err := s.cron.AddFunc(work.Schedule, func() {
+			state, ok := s.jobs[work.job.Id]
 			if ok && state.State == WorkerStateRunning { // cannot start more instances
 				return
 			}
@@ -350,7 +350,7 @@ func (runner *JobRunner) Schedule(schedule string, once bool, job *Job) (cron.En
 	s.jobs[job.Id] = work
 	s.scheduledJobs[work.Id] = work
 	s.lock.Unlock()
-	return id, nil
+	return work.Id, nil
 }
 
 func (runner *JobRunner) runTask(ctx context.Context, chain *jobChain, task *JobTask) error {

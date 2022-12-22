@@ -463,8 +463,8 @@ func (runner *JobRunner) Schedules() []JobEntry {
 	return entries
 }
 
-// Jobs will return a list of all jobs that the scheduler is aware of, with their current running state
-func (runner *JobRunner) Jobs() []JobEntry {
+// JobEntries will return a list of all jobs that the scheduler is aware of, with their current running state
+func (runner *JobRunner) JobEntries() []JobEntry {
 	entries := make([]JobEntry, 0)
 	for _, v := range runner.jobScheduler.jobs {
 		entry := JobEntry{

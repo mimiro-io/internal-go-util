@@ -91,8 +91,8 @@ func (chain *jobChain) Run(ctx context.Context) error {
 	existingTasks, _ := chain.store.GetTasks(chain.jobId)
 	for _, t := range existingTasks {
 		if _, ok := chain.tasks[t.Id]; !ok {
-			// this doesn't exist anymore
-			_ = chain.store.DeleteTask()
+			// this doesn't exist anymore, so remove it from the store
+			_ = chain.store.DeleteTask(chain.jobId, t.Id)
 		}
 	}
 

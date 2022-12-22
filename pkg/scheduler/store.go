@@ -23,6 +23,7 @@ type Store interface {
 	SaveTaskState(jobId JobId, state *TaskState) error
 	GetTasks(jobId JobId) ([]*TaskState, error)
 	DeleteTasks(jobId JobId) error
+	DeleteTask(jobId JobId, taskId string) error
 	GetLastJobHistory(jobId JobId) ([]*JobHistory, error)
 	GetJobHistory(jobId JobId, limit int) ([]*JobHistory, error)
 	ListJobHistory(limit int) ([]*JobHistory, error)
@@ -39,6 +40,11 @@ const (
 type BadgerStore struct {
 	db       *badger.DB
 	location string
+}
+
+func (b BadgerStore) DeleteTask(jobId JobId, taskId string) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (b BadgerStore) ListJobHistory(limit int) ([]*JobHistory, error) {
@@ -266,6 +272,18 @@ func (i *InMemoryStore) GetTasks(jobId JobId) ([]*TaskState, error) {
 		}
 	}
 	return tasks, nil
+}
+
+func (i *InMemoryStore) DeleteTask(jobId JobId, taskId string) error {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+	id := fmt.Sprintf("%s::%s", jobId, taskId)
+	for k, _ := range i.tasks {
+		if k == id {
+			delete(i.tasks, k)
+		}
+	}
+	return nil
 }
 
 func (i *InMemoryStore) DeleteTasks(jobId JobId) error {

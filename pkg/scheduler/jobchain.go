@@ -88,6 +88,14 @@ func (chain *jobChain) Run(ctx context.Context) error {
 
 	// go through once, and set the planned state if tasks are missing
 	// by doing this, we have the full set of tasks, even if one is failing
+	existingTasks, _ := chain.store.GetTasks(chain.jobId)
+	for _, t := range existingTasks {
+		if _, ok := chain.tasks[t.Id]; !ok {
+			// this doesn't exist anymore
+			_ = chain.store.DeleteTask()
+		}
+	}
+
 	for _, id := range order {
 		task := chain.tasks[id]
 		if task.state == nil {

@@ -23,6 +23,7 @@ type JobConfiguration struct {
 	Enabled         bool                                           `json:"enabled" yaml:"enabled"`
 	BatchSize       int                                            `json:"batchSize" yaml:"batchSize"`
 	ResumeOnRestart bool                                           `json:"resumeOnRestart" yaml:"resumeOnRestart"`
+	OnChange        string                                         `json:"onChange,omitempty" yaml:"onChange	"`
 	OnError         []string                                       `json:"onError,omitempty" yaml:"onError"`
 	OnSuccess       []string                                       `json:"onSuccess,omitempty" yaml:"onSuccess"`
 	Schedule        string                                         `json:"schedule" yaml:"schedule"`

@@ -431,6 +431,7 @@ type TaskEntry struct {
 	State string `json:"state"`
 }
 
+// Schedules will list jobs currently scheduled in the cron scheduler
 func (runner *JobRunner) Schedules() []JobEntry {
 	entries := make([]JobEntry, 0)
 	for _, e := range runner.jobScheduler.cron.Entries() {
@@ -458,5 +459,22 @@ func (runner *JobRunner) Schedules() []JobEntry {
 		}
 	}
 
+	return entries
+}
+
+type JobState struct {
+	Job   *Job   `json:"job"`
+	State string `json:"state"`
+}
+
+// Jobs will return a list of all jobs that the scheduler is aware of, with their current running state
+func (runner *JobRunner) Jobs() []*JobState {
+	entries := make([]*JobState, 0)
+	for _, v := range runner.jobScheduler.jobs {
+		entries = append(entries, &JobState{
+			Job:   v.job,
+			State: v.State,
+		})
+	}
 	return entries
 }

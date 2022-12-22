@@ -455,6 +455,7 @@ func (runner *JobRunner) Schedules() []JobEntry {
 					})
 				}
 			}
+			entry.Tasks = tasks
 			entries = append(entries, entry)
 		}
 	}
@@ -462,19 +463,39 @@ func (runner *JobRunner) Schedules() []JobEntry {
 	return entries
 }
 
-type JobState struct {
-	Job   *Job   `json:"job"`
-	State string `json:"state"`
-}
-
 // Jobs will return a list of all jobs that the scheduler is aware of, with their current running state
-func (runner *JobRunner) Jobs() []*JobState {
-	entries := make([]*JobState, 0)
+func (runner *JobRunner) Jobs() []JobEntry {
+	entries := make([]JobEntry, 0)
 	for _, v := range runner.jobScheduler.jobs {
-		entries = append(entries, &JobState{
+		entry := JobEntry{
 			Job:   v.job,
 			State: v.State,
-		})
+		}
+
+		// is this job scheduled as well?
+		worker, ok := runner.jobScheduler.scheduledJobs[v.Id]
+		if ok {
+			e := runner.jobScheduler.cron.Entry(worker.Id)
+			entry.EntryID = e.ID
+			entry.Schedule = e.Schedule
+			entry.Next = e.Next
+			entry.Prev = e.Prev
+		}
+
+		tasks := make([]*TaskEntry, 0)
+		// if a job is scheduled, but not running, then the chain is nil
+		if v.job.chain != nil {
+			for _, t := range v.job.chain.tasks {
+				tasks = append(tasks, &TaskEntry{
+					Id:    t.Id,
+					Name:  t.Name,
+					State: t.state.Status.String(),
+				})
+			}
+		}
+		entry.Tasks = tasks
+		entries = append(entries, entry)
+
 	}
 	return entries
 }

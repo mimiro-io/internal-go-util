@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"sync"
+	"time"
 )
 
 type jobChain struct {
@@ -99,16 +100,17 @@ func (chain *jobChain) Run(ctx context.Context) error {
 	for _, id := range order {
 		task := chain.tasks[id]
 		if task.state == nil {
-			_ = task.updateState(chain.jobId, StatusPlanned)
+			_ = task.updateState(chain.jobId, StatusPlanned, nil, nil)
 		}
 	}
 
 	// TODO: we must figure out what to run next, as there might be more than 1 that we can run in parallel
 	for i, id := range order {
 		// need to do some task state managing
+		start := time.Now()
 		task := chain.tasks[id]
 		if task.state == nil { // this is probably not needed
-			_ = task.updateState(chain.jobId, StatusPlanned)
+			_ = task.updateState(chain.jobId, StatusPlanned, nil, nil)
 		} else if task.state.Status == StatusSuccess {
 			chain.logger.Info(fmt.Sprintf("Skipping Job Task %s-%s in state %s (%v of %v)", chain.jobId, task.Id, task.state.Status, i+1, len(order)))
 			continue
@@ -121,7 +123,7 @@ func (chain *jobChain) Run(ctx context.Context) error {
 
 		// we need to add the jobs to the queue, and let the queue runner run the tasks
 		// this is a blocking operation
-		_ = task.updateState(chain.jobId, StatusRunning)
+		_ = task.updateState(chain.jobId, StatusRunning, &start, nil)
 		chain.logger.Info(fmt.Sprintf("Running Job Task %s-%s (%v of %v)", chain.jobId, task.Id, i+1, len(order)))
 		chain.wg.Add(1)
 		var err error
@@ -133,14 +135,15 @@ func (chain *jobChain) Run(ctx context.Context) error {
 			}
 		}()
 		chain.wg.Wait()
+		end := time.Now()
 
 		if err != nil {
-			_ = task.setFailed(chain.jobId, err)
+			_ = task.setFailed(chain.jobId, err, &start, &end)
 			chain.logger.Info(fmt.Sprintf("Failed Job task %s-%s: %v (%v of %v)", chain.jobId, task.Id, err, i+1, len(order)))
 			return err
 		}
 		if chain.lastErr != nil {
-			_ = task.setFailed(chain.jobId, chain.lastErr)
+			_ = task.setFailed(chain.jobId, chain.lastErr, &start, &end)
 			chain.logger.Info(fmt.Sprintf("Failed Job task %s-%s: %v (%v of %v)", chain.jobId, task.Id, chain.lastErr, i+1, len(order)))
 			lastErr := chain.lastErr
 			chain.lastErr = nil
@@ -148,7 +151,7 @@ func (chain *jobChain) Run(ctx context.Context) error {
 			return lastErr
 		}
 
-		_ = task.updateState(chain.jobId, StatusSuccess)
+		_ = task.updateState(chain.jobId, StatusSuccess, &start, &end)
 	}
 	return nil
 }

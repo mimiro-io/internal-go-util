@@ -18,6 +18,7 @@ const (
 	WorkerStateIdle    = "IDLE"
 	WorkerStateRunning = "RUNNING"
 	WorkerStateError   = "ERROR"
+	WorkerStateQueued  = "QUEUED"
 )
 
 var (
@@ -100,7 +101,7 @@ func (scheduler *JobScheduler) stop() {
 }
 
 func (scheduler *JobScheduler) doWork(runner *JobRunner, work *worker) {
-	work.State = WorkerStateRunning
+	work.State = WorkerStateQueued // only queued so far, not yet running, might hang in the queue for a while
 	defer func() {
 		work.State = WorkerStateIdle
 	}()
@@ -134,6 +135,7 @@ func (scheduler *JobScheduler) doWork(runner *JobRunner, work *worker) {
 		fmt.Sprintf("jobtype:%v", scheduler.name),
 	}
 
+	work.State = WorkerStateRunning
 	started := time.Now()
 	scheduler.logger.Infow(fmt.Sprintf("Starting job with id '%s' (%s)", work.Name, work.job.Title),
 		"job.jobId", work.job.Id,
@@ -211,8 +213,8 @@ func (runner *JobRunner) ForceReload(jobId JobId) error {
 func (runner *JobRunner) RunJob(ctx context.Context, jobId JobId) error {
 	var job *Job
 	if state, ok := runner.jobScheduler.jobs[jobId]; ok {
-		if state.State == WorkerStateRunning {
-			return errors.New(fmt.Sprintf("job with id '%s' (%s) already running", job.Id, job.Title))
+		if state.State == WorkerStateRunning || state.State == WorkerStateQueued {
+			return errors.New(fmt.Sprintf("job with id '%s' (%s) already queued or running", job.Id, job.Title))
 		}
 		job = state.job // we use the already existing job
 	} else {
@@ -228,7 +230,7 @@ func (runner *JobRunner) RunJob(ctx context.Context, jobId JobId) error {
 	s := runner.jobScheduler
 
 	go func() {
-		work.State = WorkerStateRunning
+		work.State = WorkerStateQueued
 		defer func() {
 			work.State = WorkerStateIdle
 		}()
@@ -241,6 +243,7 @@ func (runner *JobRunner) RunJob(ctx context.Context, jobId JobId) error {
 			}()
 		}
 
+		work.State = WorkerStateRunning
 		started := time.Now()
 		s.logger.Infow(fmt.Sprintf("Starting job with id '%s' (%s)", work.Name, work.job.Title),
 			"job.jobId", work.job.Id,
@@ -327,11 +330,11 @@ func (runner *JobRunner) Schedule(schedule string, once bool, job *Job) (cron.En
 	if work.Schedule != "" { // we only add the work to the schedule if a schedule is set (but we still add the job to the list of jobs)
 		id, err := s.cron.AddFunc(work.Schedule, func() {
 			state, ok := s.jobs[work.job.Id]
-			if ok && state.State == WorkerStateRunning { // cannot start more instances
+			if ok && (state.State == WorkerStateRunning || state.State == WorkerStateQueued) { // cannot start more instances
 				return
 			}
 
-			work.State = WorkerStateRunning
+			work.State = WorkerStateQueued
 			defer func() {
 				work.State = WorkerStateIdle
 			}()
@@ -382,7 +385,6 @@ func (runner *JobRunner) runTask(ctx context.Context, chain *jobChain, task *Job
 
 		err2 := task.Run(ctx)
 		if err2 != nil {
-			_ = task.setFailed(chain.jobId, err2)
 			chain.stop(err2)
 		}
 	}()

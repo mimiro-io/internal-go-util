@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/rs/xid"
+	"time"
 )
 
 type (
@@ -56,6 +57,8 @@ type TaskState struct {
 	Type   JobStateType   `json:"type"`
 	Status JobStateStatus `json:"status"`
 	Error  string         `json:"error"`
+	Start  time.Time      `json:"start"`
+	End    time.Time      `json:"end"`
 }
 
 func (t JobStateType) String() string {
@@ -90,7 +93,7 @@ func (s JobStateStatus) String() string {
 	return "undefined"
 }
 
-func (task *JobTask) setFailed(jobId JobId, errUnderHandle error) error {
+func (task *JobTask) setFailed(jobId JobId, errUnderHandle error, start, end *time.Time) error {
 	existing, err := task.store.GetTaskState(jobId, task.Id)
 	if err != nil {
 		return err
@@ -107,10 +110,16 @@ func (task *JobTask) setFailed(jobId JobId, errUnderHandle error) error {
 	}
 	t.Status = StatusFailed
 	t.Error = errUnderHandle.Error()
+	if start != nil {
+		t.Start = *start
+	}
+	if end != nil {
+		t.End = *end
+	}
 	return task.store.SaveTaskState(jobId, t)
 }
 
-func (task *JobTask) updateState(jobId JobId, status JobStateStatus) error {
+func (task *JobTask) updateState(jobId JobId, status JobStateStatus, start, end *time.Time) error {
 	existing, err := task.store.GetTaskState(jobId, task.Id)
 	if err != nil {
 		return err
@@ -124,6 +133,12 @@ func (task *JobTask) updateState(jobId JobId, status JobStateStatus) error {
 		}
 	} else {
 		t = existing
+	}
+	if start != nil {
+		t.Start = *start
+	}
+	if end != nil {
+		t.End = *end
 	}
 	t.Status = status
 	return task.store.SaveTaskState(jobId, t)

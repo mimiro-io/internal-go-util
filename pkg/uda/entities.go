@@ -10,6 +10,7 @@ type Entity struct {
 	IsDeleted  bool           `json:"deleted"`
 	References map[string]any `json:"refs"`
 	Properties map[string]any `json:"props"`
+	Recorded   string         `json:"recorded,omitempty"`
 }
 
 // NewEntity Create a new entity
@@ -56,4 +57,59 @@ func ToURI(context *Context, ref string) string {
 	}
 
 	return fmt.Sprintf("%s%s", l, val)
+}
+
+// ExpandUris will expand ns ref into full uris for id and refs for a list of entities
+func ExpandUris(entities []*Entity, context *Context) []*Entity {
+	var expandedEntities []*Entity
+
+	for _, entity := range entities {
+		entity.ID = ToURI(context, entity.ID)
+		newRefs := make(map[string]any)
+		for refKey, refValue := range entity.References {
+			if values, ok := refValue.([]any); ok {
+				var newValues []string
+				for _, val := range values {
+					newValues = append(newValues, ToURI(context, val.(string)))
+				}
+				newRefs[refKey] = newValues
+			} else {
+				newRefs[refKey] = ToURI(context, refValue.(string))
+			}
+		}
+		entity.References = newRefs
+		expandedEntities = append(expandedEntities, entity)
+	}
+	return expandedEntities
+}
+
+func keyStripper(entity *Entity, keyType string) map[string]any {
+	var singleMap = make(map[string]any)
+	var keys map[string]any
+	switch keyType {
+	case "props":
+		keys = entity.Properties
+	case "refs":
+		keys = entity.References
+	}
+	for k := range keys {
+		key := k
+		parts := strings.SplitAfter(k, ":")
+		if len(parts) > 1 {
+			key = parts[1]
+		}
+		singleMap[key] = keys[k]
+	}
+
+	return singleMap
+}
+
+// StripRefs will strip namespace prefix from entity reference keys
+func StripRefs(entity *Entity) map[string]any {
+	return keyStripper(entity, "refs")
+}
+
+// StripProps will strip namespace prefix from entity property keys
+func StripProps(entity *Entity) map[string]any {
+	return keyStripper(entity, "props")
 }

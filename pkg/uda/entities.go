@@ -82,3 +82,34 @@ func ExpandUris(entities []*Entity, context *Context) []*Entity {
 	}
 	return expandedEntities
 }
+
+func keyStripper(entity *Entity, keyType string) map[string]any {
+	var singleMap = make(map[string]any)
+	var keys map[string]any
+	switch keyType {
+	case "props":
+		keys = entity.Properties
+	case "refs":
+		keys = entity.References
+	}
+	for k := range keys {
+		key := k
+		parts := strings.SplitAfter(k, ":")
+		if len(parts) > 1 {
+			key = parts[1]
+		}
+		singleMap[key] = keys[k]
+	}
+
+	return singleMap
+}
+
+// StripRefs will strip namespace prefix from entity reference keys
+func StripRefs(entity *Entity) map[string]any {
+	return keyStripper(entity, "refs")
+}
+
+// StripProps will strip namespace prefix from entity property keys
+func StripProps(entity *Entity) map[string]any {
+	return keyStripper(entity, "props")
+}

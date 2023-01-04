@@ -10,6 +10,7 @@ type Entity struct {
 	IsDeleted  bool           `json:"deleted"`
 	References map[string]any `json:"refs"`
 	Properties map[string]any `json:"props"`
+	Recorded   string         `json:"recorded,omitempty"`
 }
 
 // NewEntity Create a new entity
@@ -56,4 +57,28 @@ func ToURI(context *Context, ref string) string {
 	}
 
 	return fmt.Sprintf("%s%s", l, val)
+}
+
+// ExpandUris will expand ns ref into full uris for id and refs for a list of entities
+func ExpandUris(entities []*Entity, context *Context) []*Entity {
+	var expandedEntities []*Entity
+
+	for _, entity := range entities {
+		entity.ID = ToURI(context, entity.ID)
+		newRefs := make(map[string]any)
+		for refKey, refValue := range entity.References {
+			if values, ok := refValue.([]any); ok {
+				var newValues []string
+				for _, val := range values {
+					newValues = append(newValues, ToURI(context, val.(string)))
+				}
+				newRefs[refKey] = newValues
+			} else {
+				newRefs[refKey] = ToURI(context, refValue.(string))
+			}
+		}
+		entity.References = newRefs
+		expandedEntities = append(expandedEntities, entity)
+	}
+	return expandedEntities
 }

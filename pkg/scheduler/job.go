@@ -21,10 +21,6 @@ func (*SuccessReportTask) Name() string {
 	return "SuccessReport"
 }
 
-func (*SuccessReportTask) MarshalJSON() ([]byte, error) {
-	return []byte("SuccessReport"), nil
-}
-
 func (t *SuccessReportTask) Run(_ context.Context, job *Job, history *JobHistory) error {
 	job.logger.Infof(fmt.Sprintf("Job %s finnished with the following task state:", job.Id))
 	errState := ""

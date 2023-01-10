@@ -470,7 +470,7 @@ func (runner *JobRunner) JobEntries() []JobEntry {
 	entries := make([]JobEntry, 0)
 	for _, v := range runner.jobScheduler.jobs {
 		entry := JobEntry{
-			Job:   v.job,
+			//Job:   v.job,
 			State: v.State,
 		}
 

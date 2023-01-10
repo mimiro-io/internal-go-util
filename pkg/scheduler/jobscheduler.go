@@ -418,13 +418,13 @@ func (runner *JobRunner) CancelJob(jobId JobId) {
 }
 
 type JobEntry struct {
-	EntryID  cron.EntryID  `json:"entryId"`
-	Schedule cron.Schedule `json:"schedule"`
-	Next     time.Time     `json:"next"`
-	Prev     time.Time     `json:"prev"`
-	Job      *Job          `json:"job"`
-	State    string        `json:"state"`
-	Tasks    []*TaskEntry  `json:"tasks"`
+	EntryID  cron.EntryID `json:"entryId"`
+	Schedule cron.Schedule
+	Next     time.Time    `json:"next"`
+	Prev     time.Time    `json:"prev"`
+	Job      *Job         `json:"job"`
+	State    string       `json:"state"`
+	Tasks    []*TaskEntry `json:"tasks"`
 }
 
 type TaskEntry struct {

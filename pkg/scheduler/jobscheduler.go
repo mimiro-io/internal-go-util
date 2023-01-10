@@ -418,13 +418,14 @@ func (runner *JobRunner) CancelJob(jobId JobId) {
 }
 
 type JobEntry struct {
-	EntryID  cron.EntryID `json:"entryId"`
-	Schedule cron.Schedule
-	Next     time.Time    `json:"next"`
-	Prev     time.Time    `json:"prev"`
-	Job      *Job         `json:"job"`
-	State    string       `json:"state"`
-	Tasks    []*TaskEntry `json:"tasks"`
+	EntryID cron.EntryID `json:"entryId"`
+	//Schedule cron.Schedule     `json:"-"`
+	Next    time.Time         `json:"next"`
+	Prev    time.Time         `json:"prev"`
+	Started time.Time         `json:"started"`
+	Job     *JobConfiguration `json:"job"`
+	State   string            `json:"state"`
+	Tasks   []*TaskEntry      `json:"tasks"`
 }
 
 type TaskEntry struct {
@@ -434,16 +435,21 @@ type TaskEntry struct {
 }
 
 // Schedules will list jobs currently scheduled in the cron scheduler
-func (runner *JobRunner) Schedules() []JobEntry {
+func (runner *JobRunner) Schedules() ([]JobEntry, error) {
 	entries := make([]JobEntry, 0)
 	for _, e := range runner.jobScheduler.cron.Entries() {
 		if v, ok := runner.jobScheduler.scheduledJobs[e.ID]; ok {
+			jobConfiguration, err := runner.jobScheduler.store.GetConfiguration(v.job.Id)
+			if err != nil {
+				return nil, err
+			}
 			entry := JobEntry{
-				EntryID:  e.ID,
-				Schedule: e.Schedule,
-				Next:     e.Next,
-				Prev:     e.Prev,
-				Job:      v.job,
+				EntryID: e.ID,
+				Next:    e.Next,
+				Prev:    e.Prev,
+				Job:     jobConfiguration,
+				Started: v.started,
+				State:   v.State,
 			}
 			tasks := make([]*TaskEntry, 0)
 
@@ -462,16 +468,22 @@ func (runner *JobRunner) Schedules() []JobEntry {
 		}
 	}
 
-	return entries
+	return entries, nil
 }
 
 // JobEntries will return a list of all jobs that the scheduler is aware of, with their current running state
-func (runner *JobRunner) JobEntries() []JobEntry {
+func (runner *JobRunner) JobEntries() ([]JobEntry, error) {
 	entries := make([]JobEntry, 0)
 	for _, v := range runner.jobScheduler.jobs {
+		jobConfiguration, err := runner.jobScheduler.store.GetConfiguration(v.job.Id)
+		if err != nil {
+			return nil, err
+		}
+
 		entry := JobEntry{
-			Job:   v.job,
-			State: v.State,
+			Job:     jobConfiguration,
+			State:   v.State,
+			Started: v.started,
 		}
 
 		// is this job scheduled as well?
@@ -479,7 +491,6 @@ func (runner *JobRunner) JobEntries() []JobEntry {
 		if ok {
 			e := runner.jobScheduler.cron.Entry(worker.Id)
 			entry.EntryID = e.ID
-			entry.Schedule = e.Schedule
 			entry.Next = e.Next
 			entry.Prev = e.Prev
 		}
@@ -499,5 +510,5 @@ func (runner *JobRunner) JobEntries() []JobEntry {
 		entries = append(entries, entry)
 
 	}
-	return entries
+	return entries, nil
 }

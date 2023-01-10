@@ -291,21 +291,6 @@ type worker struct {
 	started  time.Time
 }
 
-func (runner *JobRunner) RunningState(jobId JobId) *JobRunState {
-	if state, ok := runner.jobScheduler.jobs[jobId]; ok {
-		tasks, _ := runner.jobScheduler.store.GetTasks(jobId)
-		return &JobRunState{
-			JobId:    jobId,
-			JobTitle: state.job.Title,
-			State:    state.State,
-			Started:  state.started,
-			Tasks:    tasks,
-		}
-	} else {
-		return nil
-	}
-}
-
 func (runner *JobRunner) Schedule(schedule string, once bool, job *Job) (cron.EntryID, error) {
 	if job.Tasks == nil || len(job.Tasks) == 0 {
 		return 0, ErrMissingTask
@@ -432,6 +417,46 @@ type TaskEntry struct {
 	Id    string `json:"id"`
 	Name  string `json:"name"`
 	State string `json:"state"`
+}
+
+// RunningState will get the current scheduler JobEntry, if one exists for the id.
+// The JobEntry contains the full running state of the Job, and the JobTask's if any
+func (runner *JobRunner) RunningState(jobId JobId) (*JobEntry, error) {
+	if state, ok := runner.jobScheduler.jobs[jobId]; ok {
+		jobConfiguration, err := runner.jobScheduler.store.GetConfiguration(jobId)
+		if err != nil {
+			return nil, err
+		}
+
+		entry := &JobEntry{
+			Job:     jobConfiguration,
+			Started: state.started,
+			State:   state.State,
+		}
+		// is this job scheduled as well?
+		worker, ok := runner.jobScheduler.scheduledJobs[state.Id]
+		if ok {
+			e := runner.jobScheduler.cron.Entry(worker.Id)
+			entry.EntryID = e.ID
+			entry.Next = e.Next
+			entry.Prev = e.Prev
+		}
+		tasks := make([]*TaskEntry, 0)
+		// if a job is scheduled, but not running, then the chain is nil
+		if state.job.chain != nil {
+			for _, t := range state.job.chain.tasks {
+				tasks = append(tasks, &TaskEntry{
+					Id:    t.Id,
+					Name:  t.Name,
+					State: t.state.Status.String(),
+				})
+			}
+		}
+		entry.Tasks = tasks
+		return entry, nil
+	} else {
+		return nil, nil
+	}
 }
 
 // Schedules will list jobs currently scheduled in the cron scheduler

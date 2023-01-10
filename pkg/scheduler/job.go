@@ -12,7 +12,6 @@ import (
 type NamedTask interface {
 	Name() string
 	Run(ctx context.Context, job *Job, history *JobHistory) error
-	String() string
 }
 
 type SuccessReportTask struct {
@@ -22,8 +21,8 @@ func (*SuccessReportTask) Name() string {
 	return "SuccessReport"
 }
 
-func (t *SuccessReportTask) String() string {
-	return t.Name()
+func (*SuccessReportTask) MarshalJSON() ([]byte, error) {
+	return []byte("SuccessReport"), nil
 }
 
 func (t *SuccessReportTask) Run(_ context.Context, job *Job, history *JobHistory) error {

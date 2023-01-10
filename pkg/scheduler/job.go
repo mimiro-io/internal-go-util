@@ -43,18 +43,18 @@ func (t *SuccessReportTask) Run(_ context.Context, job *Job, history *JobHistory
 type JobId string
 
 type Job struct {
-	Id              JobId       `json:"id"`
-	Title           string      `json:"title"`
-	Description     string      `json:"description"`
-	Tags            []string    `json:"tags"`
-	Enabled         bool        `json:"enabled"`
-	BatchSize       int         `json:"batchSize"`
-	ResumeOnRestart bool        `json:"resumeOnRestart"`
-	OnError         []NamedTask `json:"onError"`
-	OnSuccess       []NamedTask `json:"onSuccess"`
-	Schedule        string      `json:"schedule"`
-	Topic           string      `json:"topic"`
-	Tasks           []*JobTask  `json:"tasks"`
+	Id              JobId    `json:"id"`
+	Title           string   `json:"title"`
+	Description     string   `json:"description"`
+	Tags            []string `json:"tags"`
+	Enabled         bool     `json:"enabled"`
+	BatchSize       int      `json:"batchSize"`
+	ResumeOnRestart bool     `json:"resumeOnRestart"`
+	OnError         []NamedTask
+	OnSuccess       []NamedTask
+	Schedule        string     `json:"schedule"`
+	Topic           string     `json:"topic"`
+	Tasks           []*JobTask `json:"tasks"`
 	store           Store
 	runner          *JobRunner
 	chain           *jobChain

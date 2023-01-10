@@ -25,7 +25,7 @@ type JobTask struct {
 	DependsOn   []*JobTask `json:"dependsOn"`
 	state       *TaskState
 	store       Store
-	Fn          func(ctx context.Context, task *JobTask) error
+	Fn          func(ctx context.Context, task *JobTask) error `json:"-"`
 }
 
 var DefaultFn = func(ctx context.Context, task *JobTask) error {

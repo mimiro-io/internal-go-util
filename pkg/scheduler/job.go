@@ -12,6 +12,7 @@ import (
 type NamedTask interface {
 	Name() string
 	Run(ctx context.Context, job *Job, history *JobHistory) error
+	String() string
 }
 
 type SuccessReportTask struct {
@@ -19,6 +20,10 @@ type SuccessReportTask struct {
 
 func (*SuccessReportTask) Name() string {
 	return "SuccessReport"
+}
+
+func (t *SuccessReportTask) String() string {
+	return t.Name()
 }
 
 func (t *SuccessReportTask) Run(_ context.Context, job *Job, history *JobHistory) error {

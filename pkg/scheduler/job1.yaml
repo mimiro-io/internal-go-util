@@ -10,14 +10,26 @@ description: |
 enabled: true
 batchSize: 1000
 requireDataset: true
-schedule: @every 120s
 resumeOnRestart: true
+
+triggers:
+  - trigger: schedule
+    type: incremental
+    schedule: @every 120s
+  - trigger: schedule
+    type: full
+    schedule: 0 22 * * 0 # 22:00 every sunday
+  - trigger: event
+    type: incremental # only works for incremental, incremental is default
+    datasets:
+      - cima.Farm
 
 tasks:
   - id: task1
     name: process task 1
     description: This is a test
-    type: incremental
+    incremental: true # this is the default, if not set, will always run incremental if main trigger is incremental
+    full: false # this is default, this task will run incremental even if full sync
     source:
       latestOnly: false
       dataset: sdb.Owner
@@ -28,7 +40,7 @@ tasks:
   - id: task2
     name: process task 2
     description: This is another test
-    type: fullSync
+    full: true # will still run incremental, this will override the incremental when a full sync is triggered
     source:
       batchSize: 10000
       dataset: test.CattleGroup
@@ -43,3 +55,4 @@ onSuccess:
   - SuccessReport
 onFailure:
   - ErrorReport
+

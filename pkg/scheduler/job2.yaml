@@ -24,8 +24,8 @@ tasks:
       type: DatasetSink
   - id: task2
     description: This is another test
+    batchSize: 10000
     source:
-      batchSize: 10000
       dataset: test.CattleGroup
       type: DatasetSource
     sink:

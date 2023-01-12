@@ -1,0 +1,69 @@
+id: test-animal-eanaku2
+title: test-animal-eanaku2
+version: 2
+tags:
+  - tag1
+  - tag2
+description: |
+  This is a random job
+
+enabled: true
+batchSize: 1000
+requireDataset: true
+resumeOnRestart: true
+
+tasks:
+  - id: task1
+    description: This is a test
+    source:
+      latestOnly: false
+      dataset: sdb.Owner
+      type: DatasetSource
+    sink:
+      dataset: test.CattleGroup
+      type: DatasetSink
+  - id: task2
+    description: This is another test
+    source:
+      batchSize: 10000
+      dataset: test.CattleGroup
+      type: DatasetSource
+    sink:
+      tokenProvider: JwtTokenProvider
+      type: HttpDatasetSink
+      url: "http://datalayer-s3/datasets/skifte.TaskGpsPointCompleted/entities"
+
+dags:
+  - dag: dag1
+    tasks:
+      - id: task1
+        type: incr
+      - id: task2
+        type: incr
+        dependsOn:
+          - task1
+
+  - dag: dag2
+    tasks:
+      - id: task1
+        type: full
+      - id: task2
+        type: incr
+        dependsOn:
+          - task1
+
+triggers:
+  - trigger: dag1
+    schedule: @every 120s
+  - trigger: dag2
+    schedule: 0 22 * * 0 # 22:00 every sunday
+  - trigger: dag1
+    schedule: @event
+    datasets:
+      - cima.Farm
+
+onSuccess:
+  - SuccessReport
+onFailure:
+  - ErrorReport
+

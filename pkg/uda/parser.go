@@ -3,7 +3,6 @@ package uda
 import (
 	"github.com/bcicen/jstream"
 	"io"
-	"strconv"
 	"strings"
 )
 
@@ -89,10 +88,6 @@ func AsEntity(value *jstream.MetaValue) *Entity {
 	refs, ok := raw["refs"]
 	if ok {
 		entity.References = refs.(map[string]any)
-	}
-	recorded, ok := raw["recorded"]
-	if ok {
-		entity.Recorded = strconv.FormatInt(recorded.(int64), 10)
 	}
 
 	return entity

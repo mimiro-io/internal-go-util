@@ -10,7 +10,7 @@ type Entity struct {
 	IsDeleted  bool           `json:"deleted"`
 	References map[string]any `json:"refs"`
 	Properties map[string]any `json:"props"`
-	Recorded   string         `json:"recorded,omitempty"`
+	Recorded   uint64         `json:"recorded,omitempty"`
 }
 
 // NewEntity Create a new entity

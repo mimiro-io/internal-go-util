@@ -3,10 +3,11 @@ package uda
 import (
 	"github.com/bcicen/jstream"
 	"io"
+	"strconv"
 	"strings"
 )
 
-//Parse will give a full slice of entities in one go, if oyu only have a few, this is ok,
+// Parse will give a full slice of entities in one go, if oyu only have a few, this is ok,
 // but if you have millions then this will blow up, and you should use the ParseStream instead
 func Parse(reader io.Reader) ([]any, error) {
 	entities := make([]any, 0)
@@ -27,7 +28,7 @@ func Parse(reader io.Reader) ([]any, error) {
 	return entities, nil
 }
 
-//ParseStream The following functions should probably be in separat file
+// ParseStream The following functions should probably be in separat file
 func ParseStream(reader io.Reader, emitEntity func(value *jstream.MetaValue) error) error {
 	decoder := jstream.NewDecoder(reader, 1) //Reads json
 
@@ -88,6 +89,10 @@ func AsEntity(value *jstream.MetaValue) *Entity {
 	refs, ok := raw["refs"]
 	if ok {
 		entity.References = refs.(map[string]any)
+	}
+	recorded, ok := raw["recorded"]
+	if ok {
+		entity.Recorded = strconv.FormatInt(recorded.(int64), 10)
 	}
 
 	return entity

@@ -124,7 +124,7 @@ func (chain *jobChain) Run(ctx context.Context) error {
 		// we need to add the jobs to the queue, and let the queue runner run the tasks
 		// this is a blocking operation
 		_ = task.updateState(chain.jobId, StatusRunning, &start, nil)
-		chain.logger.Info(fmt.Sprintf("Running Job Task %s-%s (%v of %v)", chain.jobId, task.Id, i+1, len(order)))
+		chain.logger.Info(fmt.Sprintf("Running Job Task %s->%s (%v of %v)", chain.jobId, task.Id, i+1, len(order)))
 		chain.wg.Add(1)
 		var err error
 		go func() {

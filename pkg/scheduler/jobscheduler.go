@@ -537,3 +537,9 @@ func (runner *JobRunner) JobEntries() ([]JobEntry, error) {
 	}
 	return entries, nil
 }
+
+func (runner *JobRunner) Stop() {
+	for _, worker := range runner.jobScheduler.jobs {
+		worker.cancel()
+	}
+}

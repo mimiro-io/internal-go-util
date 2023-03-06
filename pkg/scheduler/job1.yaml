@@ -8,10 +8,12 @@ description: |
   This is a random job
 
 enabled: true
-batchSize: 1000
-requireDataset: true
+#batchSize: 1000
 resumeOnRestart: true
 
+schedule: @every 120s
+
+# maybe?
 triggers:
   - trigger: schedule
     type: incremental
@@ -28,20 +30,20 @@ tasks:
   - id: task1
     name: process task 1
     description: This is a test
-    incremental: true # this is the default, if not set, will always run incremental if main trigger is incremental
-    full: false # this is default, this task will run incremental even if full sync
     source:
+      sync_mode: incremental
       latestOnly: false
       dataset: sdb.Owner
       type: DatasetSource
     sink:
       dataset: test.CattleGroup
       type: DatasetSink
+      requireDataset: true
   - id: task2
     name: process task 2
     description: This is another test
-    full: true # will still run incremental, this will override the incremental when a full sync is triggered
     source:
+      sync_mode: full
       batchSize: 10000
       dataset: test.CattleGroup
       type: DatasetSource
@@ -53,6 +55,7 @@ tasks:
       - task1
 onSuccess:
   - SuccessReport
+  - run:Job2
 onFailure:
   - ErrorReport
 

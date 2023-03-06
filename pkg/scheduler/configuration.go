@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/rs/xid"
+	"strings"
 	"time"
 )
 
@@ -15,21 +16,21 @@ const (
 )
 
 type JobConfiguration struct {
-	Id              JobId                                          `json:"id" yaml:"id"`
-	Title           string                                         `json:"title" yaml:"title"`
-	Version         Version                                        `json:"version" yaml:"version"`
-	Description     string                                         `json:"description" yaml:"description"`
-	Tags            []string                                       `json:"tags,omitempty" yaml:"tags"`
-	Enabled         bool                                           `json:"enabled" yaml:"enabled"`
-	BatchSize       int                                            `json:"batchSize" yaml:"batchSize"`
-	ResumeOnRestart bool                                           `json:"resumeOnRestart" yaml:"resumeOnRestart"`
-	OnChange        string                                         `json:"onChange,omitempty" yaml:"onChange	"`
-	OnError         []string                                       `json:"onError,omitempty" yaml:"onError"`
-	OnSuccess       []string                                       `json:"onSuccess,omitempty" yaml:"onSuccess"`
-	Schedule        string                                         `json:"schedule" yaml:"schedule"`
-	Topic           string                                         `json:"topic" yaml:"topic"`
-	Tasks           []*TaskConfiguration                           `json:"tasks,omitempty" yaml:"tasks"`
-	DefaultFunc     func(ctx context.Context, task *JobTask) error `json:"-"`
+	Id              JobId    `json:"id" yaml:"id"`
+	Title           string   `json:"title" yaml:"title"`
+	Version         Version  `json:"version" yaml:"version"`
+	Description     string   `json:"description" yaml:"description"`
+	Tags            []string `json:"tags,omitempty" yaml:"tags"`
+	Enabled         bool     `json:"enabled" yaml:"enabled"`
+	BatchSize       int      `json:"batchSize" yaml:"batchSize"`
+	ResumeOnRestart bool     `json:"resumeOnRestart" yaml:"resumeOnRestart"`
+	//OnChange        string                                         `json:"onChange,omitempty" yaml:"onChange"`
+	OnError     []string                                       `json:"onError,omitempty" yaml:"onError"`
+	OnSuccess   []string                                       `json:"onSuccess,omitempty" yaml:"onSuccess"`
+	Schedule    string                                         `json:"schedule" yaml:"schedule"`
+	Topic       string                                         `json:"topic" yaml:"topic"`
+	Tasks       []*TaskConfiguration                           `json:"tasks,omitempty" yaml:"tasks"`
+	DefaultFunc func(ctx context.Context, task *JobTask) error `json:"-"`
 }
 
 type TaskConfiguration struct {
@@ -123,16 +124,29 @@ func (config *JobConfiguration) ToJob(addTasks bool) (*Job, error) {
 	// map up success state:
 	success := make([]NamedTask, 0)
 	for _, s := range config.OnSuccess {
-		if s == "SuccessReport" {
+		taskName, option, _ := strings.Cut(s, ":")
+		switch strings.ToLower(taskName) {
+		case "successreport":
 			success = append(success, &SuccessReportTask{})
+		case "run":
+			success = append(success, &RunTask{JobId: option})
+		default:
+			return nil, errors.New("unsupported onSuccess or onError task type")
 		}
+
 	}
 	job.OnSuccess = success
 
 	errTasks := make([]NamedTask, 0)
 	for _, s := range config.OnError {
-		if s == "SuccessReport" {
+		taskName, option, _ := strings.Cut(s, ":")
+		switch strings.ToLower(taskName) {
+		case "successreport":
 			errTasks = append(errTasks, &SuccessReportTask{})
+		case "run":
+			errTasks = append(errTasks, &RunTask{JobId: option})
+		default:
+			return nil, errors.New("unsupported onSuccess or onError task type")
 		}
 	}
 	job.OnError = errTasks

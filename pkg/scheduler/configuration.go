@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/rs/xid"
 	"strings"
 	"time"
@@ -131,7 +132,7 @@ func (config *JobConfiguration) ToJob(addTasks bool) (*Job, error) {
 		case "run":
 			success = append(success, &RunTask{JobId: option})
 		default:
-			return nil, errors.New("unsupported onSuccess or onError task type")
+			return nil, errors.New(fmt.Sprintf("unsupported onSuccess or onError task type %s", s))
 		}
 
 	}
@@ -146,7 +147,7 @@ func (config *JobConfiguration) ToJob(addTasks bool) (*Job, error) {
 		case "run":
 			errTasks = append(errTasks, &RunTask{JobId: option})
 		default:
-			return nil, errors.New("unsupported onSuccess or onError task type")
+			return nil, errors.New(fmt.Sprintf("unsupported onSuccess or onError task type %s", s))
 		}
 	}
 	job.OnError = errTasks

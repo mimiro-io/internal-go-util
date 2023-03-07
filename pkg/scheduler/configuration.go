@@ -125,7 +125,7 @@ func (config *JobConfiguration) ToJob(addTasks bool) (*Job, error) {
 	// map up success state:
 	success := make([]NamedTask, 0)
 	for _, s := range config.OnSuccess {
-		taskName, option, _ := strings.Cut(s, ":")
+		taskName, option, _ := strings.Cut(s, "->")
 		switch strings.ToLower(taskName) {
 		case "successreport":
 			success = append(success, &SuccessReportTask{})
@@ -140,7 +140,7 @@ func (config *JobConfiguration) ToJob(addTasks bool) (*Job, error) {
 
 	errTasks := make([]NamedTask, 0)
 	for _, s := range config.OnError {
-		taskName, option, _ := strings.Cut(s, ":")
+		taskName, option, _ := strings.Cut(s, "->")
 		switch strings.ToLower(taskName) {
 		case "successreport":
 			errTasks = append(errTasks, &SuccessReportTask{})

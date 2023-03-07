@@ -214,7 +214,7 @@ func (runner *JobRunner) RunJob(ctx context.Context, jobId JobId) error {
 	var job *Job
 	if state, ok := runner.jobScheduler.jobs[jobId]; ok {
 		if state.State == WorkerStateRunning || state.State == WorkerStateQueued {
-			return errors.New(fmt.Sprintf("job with id '%s' (%s) already queued or running", job.Id, job.Title))
+			return nil
 		}
 		job = state.job // we use the already existing job
 	} else {
